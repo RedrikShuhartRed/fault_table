@@ -2,14 +2,12 @@ package db
 
 import (
 	"database/sql"
-	"encoding/json"
 	"log"
-	"os"
-	"time"
 
-	"github.com/RedrikShuhartRed/fault_table/models"
 	_ "github.com/lib/pq"
 )
+
+var dbs *sql.DB
 
 func ConnectDB() error {
 	connStr := "user=postgres password=root host=127.0.0.1 port= 5432 sslmode=disable"
@@ -54,10 +52,10 @@ func ConnectDB() error {
 	_, err = db.Exec(
 		`CREATE TABLE IF NOT EXISTS fault (
 		id BIGSERIAL NOT NULL PRIMARY KEY,
-		turbine VARCHAR(4) NOT NULL,
-		date VARCHAR(15) NOT NULL,
-		code NUMERIC(5) NOT NULL,
-		description VARCHAR(50) NOT NULL)`,
+		turbine VARCHAR(30) NOT NULL,
+		date DATE NOT NULL,
+		code VARCHAR(10) NOT NULL,
+		description VARCHAR(300) NOT NULL)`,
 	)
 
 	if err != nil {
@@ -65,26 +63,31 @@ func ConnectDB() error {
 		return nil
 	}
 
-	data, err := os.ReadFile("D:/project/alarmtable/db/DATA.json")
-	if err != nil {
-		log.Printf("Ошибка чтения файла с данными: %s", err)
-		return err
-	}
+	// data, err := os.ReadFile("D:/project/alarmtable/db/DATA.json")
+	// if err != nil {
+	// 	log.Printf("Ошибка чтения файла с данными: %s", err)
+	// 	return err
+	// }
 
-	var fault []models.Fault
-	err = json.Unmarshal(data, &fault)
-	if err != nil {
-		log.Printf("Ошибка Unmarshal исходных данных: %s", err)
-		return err
-	}
-	for _, f := range fault {
-		date, _ := time.Parse("02.01.2006", f.Date)
-		dateStr := date.Format("02.01.2006")
-		_, err := db.Exec(`INSERT INTO fault (turbine, date, code, description) VALUES ($1,$2,$3,$4)`, f.Turbine, dateStr, f.Code, f.Description)
-		if err != nil {
-			log.Printf("Ошибка вставки данных из файла в БД: %s", err)
-			return err
-		}
-	}
+	// var fault []models.Fault
+	// err = json.Unmarshal(data, &fault)
+	// if err != nil {
+	// 	log.Printf("Ошибка Unmarshal исходных данных: %s", err)
+	// 	return err
+	// }
+	// for _, f := range fault {
+	// 	date, _ := time.Parse("02.01.2006", f.Date)
+	// 	dateStr := date.Format("02.01.2006")
+	// 	_, err := db.Exec(`INSERT INTO fault (turbine, date, code, description) VALUES ($1,$2,$3,$4)`, f.Turbine, dateStr, f.Code, f.Description)
+	// 	if err != nil {
+	// 		log.Printf("Ошибка вставки данных из файла в БД: %s", err)
+	// 		return err
+	// 	}
+	// }
+	dbs = db
 	return nil
+}
+
+func GetDB() *sql.DB {
+	return dbs
 }

@@ -12,8 +12,9 @@ import (
 
 func CreateFault() (models.Fault, error) {
 	var fault models.Fault
+	reader := bufio.NewReader(os.Stdin)
 	for {
-		reader := bufio.NewReader(os.Stdin)
+
 		var err error
 
 		fmt.Println("Введите номер турбины")

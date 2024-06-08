@@ -12,16 +12,13 @@ import (
 
 func CreateExcel(fault []models.Fault) error {
 	f := excelize.NewFile()
-	defer func() {
-		if err := f.Close(); err != nil {
-			fmt.Println(err)
-		}
-	}()
+
+	defer f.Close()
 
 	index, err := f.NewSheet("Sheet1")
 	if err != nil {
-		fmt.Println(err)
-		return nil
+		log.Printf("Ошибка создания листа excel: %s", err)
+		return err
 	}
 
 	i := 1

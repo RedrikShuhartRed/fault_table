@@ -63,31 +63,19 @@ func ConnectDB() error {
 		return nil
 	}
 
-	// data, err := os.ReadFile("D:/project/alarmtable/db/DATA.json")
-	// if err != nil {
-	// 	log.Printf("Ошибка чтения файла с данными: %s", err)
-	// 	return err
-	// }
-
-	// var fault []models.Fault
-	// err = json.Unmarshal(data, &fault)
-	// if err != nil {
-	// 	log.Printf("Ошибка Unmarshal исходных данных: %s", err)
-	// 	return err
-	// }
-	// for _, f := range fault {
-	// 	date, _ := time.Parse("02.01.2006", f.Date)
-	// 	dateStr := date.Format("02.01.2006")
-	// 	_, err := db.Exec(`INSERT INTO fault (turbine, date, code, description) VALUES ($1,$2,$3,$4)`, f.Turbine, dateStr, f.Code, f.Description)
-	// 	if err != nil {
-	// 		log.Printf("Ошибка вставки данных из файла в БД: %s", err)
-	// 		return err
-	// 	}
-	// }
 	dbs = db
 	return nil
 }
 
 func GetDB() *sql.DB {
 	return dbs
+}
+
+func CloseDB(db *sql.DB) error {
+	err := db.Close()
+	if err != nil {
+		log.Printf("Ошибка закрытия подключения в БД: %s", err)
+		return err
+	}
+	return nil
 }

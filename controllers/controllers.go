@@ -7,7 +7,6 @@ import (
 	"github.com/RedrikShuhartRed/fault_table/excel"
 	"github.com/RedrikShuhartRed/fault_table/models"
 	"github.com/RedrikShuhartRed/fault_table/query"
-	"github.com/RedrikShuhartRed/fault_table/text"
 )
 
 func AddFault(db *sql.DB, fault models.Fault) error {
@@ -21,7 +20,7 @@ func AddFault(db *sql.DB, fault models.Fault) error {
 	return nil
 }
 
-func GetAll(enter string, db *sql.DB) error {
+func GetAll(enter, begin, end string, db *sql.DB) ([]models.Fault, error) {
 	var fault []models.Fault
 	var err error
 	var rows *sql.Rows
@@ -32,7 +31,7 @@ func GetAll(enter string, db *sql.DB) error {
 	case "2":
 		rows, err = db.Query(query.QueryGetAllByDateDESC)
 	case "3":
-		begin, end, _ := text.GetBetweenDate()
+
 		rows, err = db.Query(query.QueryGetAllBetweenDate, begin, end)
 	case "4":
 		rows, err = db.Query(query.QueryGetAllByTurbine)
@@ -42,7 +41,7 @@ func GetAll(enter string, db *sql.DB) error {
 
 	if err != nil {
 		log.Printf("Ошибка считывания данных, %s:", err)
-		return err
+		return []models.Fault{}, err
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -51,14 +50,14 @@ func GetAll(enter string, db *sql.DB) error {
 		err := rows.Scan(&alarm.Turbine, &alarm.Date, &alarm.Code, &alarm.Description)
 		if err != nil {
 			log.Printf("Ошибка считывания данных, %s:", err)
-			return err
+			return []models.Fault{}, err
 		}
 
 		fault = append(fault, alarm)
 	}
 	excel.CreateExcel(fault)
 
-	return nil
+	return fault, nil
 }
 
 func GetByTurbine(turbine string, db *sql.DB) error {

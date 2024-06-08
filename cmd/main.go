@@ -23,7 +23,8 @@ LOOP:
 		controllers.AddFault(dbs, fault)
 	case "2":
 		enter, _ := text.EnterGetAll()
-		controllers.GetAll(enter, dbs)
+		begin, end, _ := text.GetBetweenDate()
+		controllers.GetAll(enter, begin, end, dbs)
 	case "3":
 		turbine, _ := text.EnterGetByTurbine()
 		controllers.GetByTurbine(turbine, dbs)

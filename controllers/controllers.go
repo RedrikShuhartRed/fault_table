@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
-	"time"
 
+	"github.com/RedrikShuhartRed/fault_table/excel"
 	"github.com/RedrikShuhartRed/fault_table/models"
-	"github.com/xuri/excelize/v2"
 )
 
 func AddFault(db *sql.DB) error {
@@ -63,7 +61,47 @@ func AddFault(db *sql.DB) error {
 
 func GetAll(db *sql.DB) error {
 	var fault []models.Fault
-	rows, err := db.Query("SELECT turbine, to_char(date,'YYYY-MM-DD'), code, description from fault")
+	var query string
+	var rows *sql.Rows
+	fmt.Println("1 - Выгрузить по возрастанию даты авари")
+	fmt.Println("2 - Выгрузить по убыванию даты авари")
+	fmt.Println("3 - Выгрузить за определенный период")
+	fmt.Println("4 - Сгруппировать выгрузку по номеру турбины")
+	fmt.Println("5 - Сгрупиировать выгрузку по коду аварии")
+	_, err := fmt.Scanln(&query)
+	switch query {
+	case "1":
+		rows, err = db.Query("SELECT turbine, to_char(date,'YYYY-MM-DD'), code, description from fault ORDER BY date ASC")
+	case "2":
+		rows, err = db.Query("SELECT turbine, to_char(date,'YYYY-MM-DD'), code, description from fault ORDER BY date DESC")
+	case "3":
+		reader := bufio.NewReader(os.Stdin)
+
+		fmt.Println("Введите начало периода в формате гггг.мм.дд")
+
+		begin, err := reader.ReadString('\n')
+		if err != nil {
+			log.Printf("Ошибка ввода начала периода: %s", err)
+			return err
+		}
+		begin = strings.TrimRight(begin, "\r\n")
+
+		fmt.Println("Введите окончание периода периода в формате гггг.мм.дд")
+		end, err := reader.ReadString('\n')
+		if err != nil {
+			log.Printf("Ошибка ввода окончания периода: %s", err)
+			return err
+		}
+		end = strings.TrimRight(end, "\r\n")
+
+		rows, err = db.Query(`SELECT turbine, to_char(date,'YYYY-MM-DD'), code, description from fault
+	WHERE date BETWEEN $1 AND $2 ORDER BY date DESC`, begin, end)
+	case "4":
+		rows, err = db.Query("SELECT turbine, to_char(date,'YYYY-MM-DD'), code, description from fault ORDER BY turbine")
+	case "5":
+		rows, err = db.Query("SELECT turbine, to_char(date,'YYYY-MM-DD'), code, description from fault ORDER BY code")
+	}
+
 	if err != nil {
 		log.Printf("Ошибка считывания данных, %s:", err)
 		return err
@@ -80,52 +118,8 @@ func GetAll(db *sql.DB) error {
 
 		fault = append(fault, alarm)
 	}
+	excel.CreateExcel(fault)
 
-	f := excelize.NewFile()
-	defer func() {
-		if err := f.Close(); err != nil {
-			fmt.Println(err)
-		}
-	}()
-
-	index, err := f.NewSheet("Sheet1")
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-
-	i := 1
-	for _, v := range fault {
-		turbine, err := strconv.Atoi(v.Turbine)
-		if err != nil {
-			log.Printf("Ошибка преоразования номера турбины: %s", err)
-			return err
-		}
-		code, err := strconv.Atoi(v.Code)
-		if err != nil {
-			log.Printf("Ошибка преоразования кода аварии турбины: %s", err)
-			return err
-		}
-
-		date, err := time.Parse("2006-01-02", v.Date)
-		if err != nil {
-			log.Printf("Ошибка форматирования даты аварии: %s", err)
-			return err
-		}
-
-		f.SetCellValue("Sheet1", fmt.Sprintf("A%v", i), turbine)
-		f.SetCellValue("Sheet1", fmt.Sprintf("B%v", i), date.Format("2006-01-02"))
-		f.SetCellValue("Sheet1", fmt.Sprintf("C%v", i), code)
-		f.SetCellValue("Sheet1", fmt.Sprintf("D%v", i), v.Description)
-		i++
-	}
-
-	f.SetActiveSheet(index)
-
-	if err := f.SaveAs("Общий список аварий.xlsx"); err != nil {
-		log.Printf("Ошибка сохранения файла \"Общий список аварий.xlsx\": %s", err)
-		return err
-	}
 	return nil
 }
 
@@ -140,7 +134,7 @@ func GetByTurbine(db *sql.DB) error {
 	}
 	turbine = strings.TrimRight(turbine, "\r\n")
 
-	rows, err := db.Query("SELECT turbine, to_char(date,'YYYY-MM-DD'), code, description from fault WHERE turbine=$1", turbine)
+	rows, err := db.Query("SELECT turbine, to_char(date,'YYYY-MM-DD'), code, description from fault WHERE turbine=$1 ORDER BY date DESC", turbine)
 	if err != nil {
 		log.Printf("Ошибка считывания данных, %s:", err)
 		return err
@@ -158,51 +152,7 @@ func GetByTurbine(db *sql.DB) error {
 
 		fault = append(fault, alarm)
 	}
+	excel.CreateExcel(fault)
 
-	f := excelize.NewFile()
-	defer func() {
-		if err := f.Close(); err != nil {
-			fmt.Println(err)
-		}
-	}()
-
-	index, err := f.NewSheet("Sheet1")
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-
-	i := 1
-	for _, v := range fault {
-		turbine, err := strconv.Atoi(v.Turbine)
-		if err != nil {
-			log.Printf("Ошибка преоразования номера турбины: %s", err)
-			return err
-		}
-		code, err := strconv.Atoi(v.Code)
-		if err != nil {
-			log.Printf("Ошибка преоразования кода аварии турбины: %s", err)
-			return err
-		}
-
-		date, err := time.Parse("2006-01-02", v.Date)
-		if err != nil {
-			log.Printf("Ошибка форматирования даты аварии: %s", err)
-			return err
-		}
-
-		f.SetCellValue("Sheet1", fmt.Sprintf("A%v", i), turbine)
-		f.SetCellValue("Sheet1", fmt.Sprintf("B%v", i), date.Format("2006-01-02"))
-		f.SetCellValue("Sheet1", fmt.Sprintf("C%v", i), code)
-		f.SetCellValue("Sheet1", fmt.Sprintf("D%v", i), v.Description)
-		i++
-	}
-
-	f.SetActiveSheet(index)
-
-	if err := f.SaveAs("Список аварий.xlsx"); err != nil {
-		log.Printf("Ошибка сохранения файла \"Список аварий.xlsx\": %s", err)
-		return err
-	}
 	return nil
 }

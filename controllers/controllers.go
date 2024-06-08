@@ -31,7 +31,6 @@ func GetAll(enter, begin, end string, db *sql.DB) ([]models.Fault, error) {
 	case "2":
 		rows, err = db.Query(query.QueryGetAllByDateDESC)
 	case "3":
-
 		rows, err = db.Query(query.QueryGetAllBetweenDate, begin, end)
 	case "4":
 		rows, err = db.Query(query.QueryGetAllByTurbine)

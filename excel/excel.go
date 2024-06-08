@@ -25,12 +25,12 @@ func CreateExcel(fault []models.Fault) error {
 	for _, v := range fault {
 		turbine, err := strconv.Atoi(v.Turbine)
 		if err != nil {
-			log.Printf("Ошибка преоразования номера турбины: %s", err)
+			log.Printf("Ошибка преобразования номера турбины: %s", err)
 			return err
 		}
 		code, err := strconv.Atoi(v.Code)
 		if err != nil {
-			log.Printf("Ошибка преоразования кода аварии турбины: %s", err)
+			log.Printf("Ошибка преобразования кода аварии турбины: %s", err)
 			return err
 		}
 

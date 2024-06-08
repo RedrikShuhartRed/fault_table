@@ -13,6 +13,7 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	db.ConnectDB()
 	dbs := db.GetDB()
+
 LOOP:
 	enter, _ := text.EnterMain()
 
@@ -21,7 +22,8 @@ LOOP:
 		fault, _ := text.CreateFault()
 		controllers.AddFault(dbs, fault)
 	case "2":
-		controllers.GetAll(dbs)
+		enter, _ := text.EnterGetAll()
+		controllers.GetAll(enter, dbs)
 	case "3":
 		turbine, _ := text.EnterGetByTurbine()
 		controllers.GetByTurbine(turbine, dbs)

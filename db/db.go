@@ -74,7 +74,7 @@ func GetDB() *sql.DB {
 func CloseDB(db *sql.DB) error {
 	err := db.Close()
 	if err != nil {
-		log.Printf("Ошибка закрытия подключения в БД: %s", err)
+		log.Printf("Ошибка закрытия подключения к БД: %s", err)
 		return err
 	}
 	return nil

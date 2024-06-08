@@ -76,16 +76,23 @@ func EnterMain() (string, error) {
 
 func EnterGetAll() (string, error) {
 	var enter string
-	fmt.Println(`
+	for {
+		fmt.Println(`
 1 - Выгрузить по возрастанию даты аварии,
 2 - Выгрузить по убыванию даты аварии,
 3 - Выгрузить за определенный период,
 4 - Сгруппировать выгрузку по номеру турбины,
-5 - Сгуппировать выгрузку по коду аварии.`)
-	_, err := fmt.Scanln(&enter)
-	if err != nil {
-		log.Printf("Ошибка выбора пункта: %s", err)
-		return "", err
+5 - Сгруппировать выгрузку по коду аварии.`)
+		_, err := fmt.Scanln(&enter)
+		if err != nil {
+			log.Printf("Ошибка выбора пункта: %s", err)
+			return "", err
+		}
+		if enter != "1" && enter != "2" && enter != "3" && enter != "4" && enter != "5" {
+			fmt.Println("\nВведите цифры от 1 до 5")
+			continue
+		}
+		break
 	}
 	return enter, nil
 }
@@ -112,4 +119,26 @@ func EnterGetByFault() (string, error) {
 	}
 	code = strings.TrimRight(code, "\r\n")
 	return code, nil
+}
+
+func GetBetweenDate() (string, string, error) {
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Println("Введите начало периода в формате гггг.мм.дд")
+
+	begin, err := reader.ReadString('\n')
+	if err != nil {
+		log.Printf("Ошибка ввода начала периода: %s", err)
+		return "", "", err
+	}
+	begin = strings.TrimRight(begin, "\r\n")
+
+	fmt.Println("Введите окончание периода периода в формате гггг.мм.дд")
+	end, err := reader.ReadString('\n')
+	if err != nil {
+		log.Printf("Ошибка ввода окончания периода: %s", err)
+		return "", "", err
+	}
+	end = strings.TrimRight(end, "\r\n")
+	return begin, end, nil
 }
